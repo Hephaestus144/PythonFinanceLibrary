@@ -1,6 +1,6 @@
 import numpy as np
 import unittest
-from src.Finance.StochasticProcesses.GBM import GBM
+from src.StochasticProcesses.GBM import GBM
 
 
 class GBM_Tests(unittest.TestCase):
@@ -33,13 +33,13 @@ class GBM_Tests(unittest.TestCase):
         avg = np.average(sp.paths[:, -1])
         self.assertTrue(100 - stddev < avg < 100 + stddev)
 
-    # def test_plot(self):
-    #     S0 = 100
-    #     mu = 0.1
-    #     sigma = 0.2
-    #     dt = 0.1
-    #     T = 1
-    #     simulation_count = 100
-    #     sp = GBM(S0, mu, sigma, dt, T, simulation_count)
-    #     sp.generate_paths()
-    #     sp.plot_paths()
+    def test_plot(self):
+        s0 = 100
+        mu = 0.1
+        sigma = 0.2
+        dt = 0.01
+        t = 1
+        simulation_count = 1000
+        sp = GBM(s0, mu, sigma, t, dt, simulation_count)
+        sp.generate_paths()
+        sp.plot_paths()
