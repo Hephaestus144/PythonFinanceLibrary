@@ -2,10 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-from src.Finance.Curves.RateConvention import RateConvention
+from src.Curves.RateConvention import RateConvention
+from Curve import Curve
 
 
-class InterestRateCurve:
+class InterestRateCurve(Curve):
     def __init__(self, **kwargs):
         self.tenors = kwargs.pop('tenors', None)
         self.discount_factors = kwargs.pop('discount_factors', None)

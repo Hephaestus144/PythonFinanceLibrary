@@ -3,43 +3,42 @@ import unittest
 from src.StochasticProcesses.GBM import GBM
 
 
-class GBM_Tests(unittest.TestCase):
+class TestsGBM(unittest.TestCase):
     # driftless test
     # pfe type test
     # stats tests
     def test_deterministic(self):
-        S0 = 100
-        mu = 0.1
-        sigma = 0.0
-        dt = 0.1
-        T = 1
+        initial_asset_value = 100
+        drift = 0.1
+        volatility = 0.0
+        time_step_size = 0.1
+        time_to_maturity = 1
         simulation_count = 1
-        sp = GBM(S0, mu, sigma, T, dt, simulation_count)
-        sp.generate_paths()
-        # print(f"Final value was {sp.paths[0, -1]:.2f}")
-        self.assertAlmostEqual(sp.paths[0, -1], 110.52, 2)
+        gbm = GBM(initial_asset_value, drift, volatility, time_to_maturity, time_step_size, simulation_count)
+        gbm.generate_paths()
+        self.assertAlmostEqual(gbm.paths[0, -1], 110.52, 2)
 
     def test_driftless(self):
-        S0 = 100
-        mu = 0.0
-        sigma = 0.2
-        dt = 0.1
-        T = 1
+        initial_asset_value = 100
+        drift = 0.0
+        volatility = 0.2
+        time_step_size = 0.1
+        time_to_maturity = 1
         simulation_count = 100
-        sp = GBM(S0, mu, sigma, T, dt, simulation_count)
-        sp.generate_paths()
-        # print(f"Final value was {sp.paths[0, -1]:.2f}")
-        stddev = 100*(np.exp(sigma**2) - 1)
-        avg = np.average(sp.paths[:, -1])
+        gbm = GBM(initial_asset_value, drift, volatility, time_to_maturity, time_step_size, simulation_count)
+        gbm.generate_paths()
+        stddev = 100 * (np.exp(volatility ** 2) - 1)
+        avg = np.average(gbm.paths[:, -1])
         self.assertTrue(100 - stddev < avg < 100 + stddev)
 
-    def test_plot(self):
-        s0 = 100
-        mu = 0.1
-        sigma = 0.2
-        dt = 0.01
-        t = 1
+    @staticmethod
+    def test_plot():
+        initial_asset_value: float = 100
+        drift: float = 0.1
+        volatility: float = 0.2
+        time_step_size: float = 0.01
+        time_to_maturity: float = 1
         simulation_count = 1000
-        sp = GBM(s0, mu, sigma, t, dt, simulation_count)
+        sp = GBM(initial_asset_value, drift, volatility, time_to_maturity, time_step_size, simulation_count)
         sp.generate_paths()
         sp.plot_paths()
