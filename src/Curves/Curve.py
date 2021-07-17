@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 
@@ -26,3 +28,25 @@ class Curve:
         # TODO: Make interpolation configurable.
         # TODO: Make extrapolation configurable.
         return np.interp(tenors, self.tenors, self.discount_factors)
+
+    def get_forward_rates(self, start_points: np.ndarray, end_points: np.ndarray) -> np.ndarray:
+        """
+        Calculates forward rates (including zero rates which are just a special case).
+
+        :param start_points: The starting time points for the forward rates.
+        :type start_points: np.ndarray
+        :param end_points: The end time points for the forward rates.
+        :type end_points: np.ndarray
+        :return: Array of forward rates.
+        :rtype: np.ndarray
+        """
+
+        forward_rates: np.ndarray = np.array([])
+        start_discount_factors: np.ndarray = self.get_discount_factors(start_points)
+        end_discount_factors: np.ndarray = self.get_discount_factors(end_points)
+        for i in range(0, len(start_points)):
+            forward_rate = 1 / (end_points[i] - start_points[i]) *\
+                           math.log(start_discount_factors[i] / end_discount_factors[i])
+            forward_rates = np.append(forward_rates, forward_rate)
+
+        return forward_rates

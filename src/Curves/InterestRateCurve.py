@@ -56,7 +56,7 @@ class InterestRateCurve(Curve):
             return "Invalid rate convention"
 
     # assumes NACC rates for now
-    def get_forward_rates(self, start_tenors, end_tenors):
+    def get_forward_rates(self, start_points, end_points):
         start_discount_factors = self.get_discount_factors(start_tenors)
         end_discount_factors = self.get_discount_factors(end_tenors)
         t = end_tenors - start_tenors

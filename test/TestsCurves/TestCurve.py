@@ -22,3 +22,12 @@ def test_discount_factor_right_extrapolation():
 def test_discount_factor_left_extrapolation():
     curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
     assert curve.get_discount_factors(0.125) == 0.975
+
+
+def test_forward_rates():
+    curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
+    start_points: np.ndarray = np.array([0.00, 0.25, 0.50, 0.75])
+    end_points: np.ndarray = np.array([0.25, 0.50, 0.75, 1.00])
+    expected_forward_rates: np.ndarray = np.array([0.20517318, 0.21626889, 0.22863366, 0.24249849])
+    actual_forward_rates: np.ndarray = curve.get_forward_rates(start_points, end_points)
+    assert np.allclose(expected_forward_rates, actual_forward_rates)

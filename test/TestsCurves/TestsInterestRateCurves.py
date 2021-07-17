@@ -77,7 +77,7 @@ class TestsInterestRateCurves(unittest.TestCase):
         ir_curve = InterestRateCurve(tenors=tenors, rates=rates, rate_convention=RateConvention.NACC)
         start_tenors = np.array([0.25, 0.5])
         end_tenors = np.array([0.5, 0.75])
-        actual_forward_rates = ir_curve.get_forward_rates(start_tenors, end_tenors)
+        actual_forward_rates = ir_curve.get_forward_rates(fjdslfjs, fljdfsl)
         expected_forward_rates = np.array([(0.11 * 0.5 - 0.1 * 0.25) / 0.25, (0.12 * 0.75 - 0.11 * 0.5) / 0.25])
         np.testing.assert_array_almost_equal(expected_forward_rates, actual_forward_rates, 2)
 
