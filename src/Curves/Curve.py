@@ -50,3 +50,9 @@ class Curve:
             forward_rates = np.append(forward_rates, forward_rate)
 
         return forward_rates
+
+    def get_first_order_derivative_of_zero_rate(self, tenors: np.ndarray) -> np.ndarray:
+        tenors_plus_delta_t: np.ndarray = tenors + 0.0001
+        start_points = np.zeros(len(tenors))
+        forward_rates: np.ndarray = self.get_forward_rates(start_points, tenors)
+        forward_rates_plus_delta: np.ndarray = self.get_forward_rates(start_points, tenors_plus_delta_t)
