@@ -10,6 +10,13 @@ class Curve:
     def __init__(self, **kwargs):
         self.tenors: np.ndarray = kwargs.pop('tenors', None)
         self.discount_factors: np.ndarray = kwargs.pop('discount_factors', None)
+        self.zero_rates: np.ndarray = kwargs.pop('zero_rates', None)
+
+        if self.zero_rates is None:
+            self.zero_rates = -1 * np.log(self.discount_factors) / self.tenors
+
+        if self.discount_factors is None:
+            self.discount_factors = np.exp(-1 * np.array(self.zero_rates) * np.array(self.tenors))
 
         if not self.tenors.__contains__(0):
             self.tenors = np.append(0, self.tenors)
@@ -51,8 +58,7 @@ class Curve:
 
         return forward_rates
 
-    def get_first_order_derivative_of_zero_rates(self, tenors: np.ndarray) -> np.ndarray:
-        delta_t: float = 0.0001
+    def get_first_order_derivative_of_zero_rates(self, tenors: np.ndarray, delta_t: float = 0.0001) -> np.ndarray:
         tenors_plus_delta_t: np.ndarray = tenors + delta_t
         start_points = np.zeros(len(tenors))
         forward_rates: np.ndarray = self.get_forward_rates(start_points, tenors)
