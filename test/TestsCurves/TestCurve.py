@@ -2,6 +2,13 @@ import numpy as np
 from src.Curves.Curve import Curve
 
 
+def test_get_discount_factors_at_nodes_points():
+    curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
+    expected = np.array([0.95, 0.90, 0.85, 0.80])
+    actual = curve.get_discount_factors([0.25, 0.50, 0.75, 1.00])
+    assert np.allclose(expected, actual)
+
+
 def test_curve_constructor_from_discount_factors():
     curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
     expected_zero_rates = -1 * np.log([0.95, 0.90, 0.85, 0.80]) / np.array([0.25, 0.50, 0.75, 1.00])
@@ -47,5 +54,8 @@ def test_forward_rates():
     assert np.allclose(expected_forward_rates, actual_forward_rates)
 
 
-# def test_derivative_of_flat_curve_zero_rates():
-#     curve = Curve(tenors=[0.25, 0.50])
+def test_get_forward_discount_factors():
+    curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
+    actual = curve.get_forward_discount_factors(0.25, [0.25, 0.50, 0.75, 1.00])
+    expected = np.append(1, np.array([0.90, 0.85, 0.80]) / 0.95)
+    assert np.allclose(actual, expected)
