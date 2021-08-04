@@ -23,3 +23,4 @@ def test_b_function(hw):
 
 def test_interpolate_sigma(hw):
     assert hw.interpolate_sigma(1.0) == 0.2
+

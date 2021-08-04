@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.interpolate import interpolate
+from scipy.stats import norm
 
 
 class HullWhite:
@@ -59,10 +60,17 @@ class HullWhite:
                 df
             denominator += b[i] * df
 
-        return self.sigma_interpolator(swaption_expiry) * numerator / denominator
+        return self.interpolate_sigma(swaption_expiry) * numerator / denominator
 
     def interpolate_sigma(self, time: float):
         if self.sigma_interpolator is None:
             return self.sigmas[0]
         else:
             return self.sigma_interpolator(time)
+
+    def swaption_pricer(self, strike, swaption_expiry: float, h, swap_cashflow_tenors):
+        v = self.swaption_pricing_sigma(strike, swaption_expiry, swap_cashflow_tenors)
+        d1 = np.log(h) / v + 0.5 * v
+        d2 = d1 - v
+        df = self.initial_curve.get_discount_factors(swap_cashflow_tenors[-1])
+        return df * (h * norm.cdf(d1) - norm.cdf(d2))
