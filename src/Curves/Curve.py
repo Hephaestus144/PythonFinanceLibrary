@@ -31,7 +31,8 @@ class Curve:
                 self.tenors,
                 self.discount_factors,
                 kind=self.interpolation_method,
-                fill_value='extrapolate')
+                fill_value=(self.discount_factors[0], self.discount_factors[-1]),
+                bounds_error=False)
 
     def get_discount_factors(self, tenors: np.ndarray, interpolation_method: str = 'linear') -> np.ndarray:
         """
@@ -74,13 +75,12 @@ class Curve:
         :return: Array of forward rates.
         :rtype: np.ndarray
         """
-        forward_rates: np.ndarray = np.array([])
+        forward_rates: np.ndarray = np.zeros(len(start_points))
         start_discount_factors: np.ndarray = self.get_discount_factors(start_points)
         end_discount_factors: np.ndarray = self.get_discount_factors(end_points)
         for i in range(0, len(start_points)):
-            forward_rate = 1 / (end_points[i] - start_points[i]) *\
-                           math.log(start_discount_factors[i] / end_discount_factors[i])
-            forward_rates = np.append(forward_rates, forward_rate)
+            forward_rates[i] = \
+                1 / (end_points[i] - start_points[i]) * math.log(start_discount_factors[i] / end_discount_factors[i])
         return forward_rates
 
     def get_first_order_derivative_of_zero_rates(self, tenors: np.ndarray, delta_t: float = 0.0001) -> np.ndarray:
