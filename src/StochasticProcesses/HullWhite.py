@@ -2,16 +2,27 @@ import numpy as np
 from scipy.integrate import quad
 from scipy.interpolate import interpolate
 from scipy.stats import norm
+from src.Curves.Curve import Curve
 
 
 class HullWhite:
     """
-    Creates an instance of a Hull-White stochastic process.
+    A class for the Hull-White stochastic process.
     :math:`dr(t) = (\\theta(t) - \\alpha r(t))dt + \\sigma(t) dW(t)`
-
     """
 
-    def __init__(self, alpha, sigma_tenors, sigmas, initial_curve):
+    def __init__(self, alpha: float, sigma_tenors: np.ndarray, sigmas: np.ndarray, initial_curve: Curve):
+        """
+        Constructor for the Hull-White process.
+
+        :param alpha: The standard mean reversion speed, commonly denoted :math:`\\alpha`.
+        :type alpha: float
+        :param sigma_tenors: The corresponding tenors for the sigma_tenors parameters.
+        :type sigma_tenors: np.ndarray
+        :param sigmas: The standard volatility of the Hull-White process, commonly denoted :math:`\\sigma(t)`.
+        :type sigmas: np.ndarray
+        """
+        # TODO: Add theta
         self.alpha = alpha
         self.sigma_tenors = sigma_tenors
         self.sigmas = sigmas
@@ -56,7 +67,7 @@ class HullWhite:
         else:
             return self.sigma_interpolator(time)
 
-    def swaption_pricing_volatility(self, swaption_expiry: float, strike: float, swap_cashflow_tenors: np.ndarray) -> float:
+    def swaption_pricing_vol(self, swaption_expiry: float, strike: float, swap_cashflow_tenors: np.ndarray) -> float:
         """
         • This implements the swaption pricing formula for the volatility as per formula 16.95 of Green. Denoted
         :math:`\\Sigma`.
@@ -103,7 +114,7 @@ class HullWhite:
         :returns: The price of a swaption.
         :rtype: float
         """
-        v = np.sqrt(quad(self.swaption_pricing_volatility, 0, swap_cashflow_tenors[-1], args=(strike, swap_cashflow_tenors)))
+        v = np.sqrt(quad(self.swaption_pricing_vol, 0, swap_cashflow_tenors[-1], args=(strike, swap_cashflow_tenors)))
         d1 = np.log(h) / v + 0.5 * v
         d2 = d1 - v
         df = self.initial_curve.get_discount_factors(swap_cashflow_tenors[-1])
