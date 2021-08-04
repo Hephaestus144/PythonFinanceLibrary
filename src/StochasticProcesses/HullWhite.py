@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class HullWhite:
     """
     Notes:
@@ -9,3 +12,21 @@ class HullWhite:
         self.alpha = alpha
         self.sigma = sigma
         self.initial_curve = initial_curve
+
+    def b_function(self, start_time: float, end_time: float) -> float:
+        """
+        Calculates the value of the classic 'B' function commonly associated with Hull-White.
+
+        :param start_time: The start time.
+        :type start_time: float
+        :param end_time: The end time.
+        :type end_time: float
+        :returns: Value of B function for Hull-White (see Green, Shreve, et al.)
+        :rtype: float
+        """
+        return (1/self.alpha) * (1 - np.exp(-1 * self.alpha * (end_time - start_time)))
+
+    def swaption_pricing_sigma(self, swaption_expiry: float, swap_cashflow_tenors: np.ndarray):
+        """
+        This implements the swaption pricing formula for the volatility as per formula 16.95 of Green.
+        """
