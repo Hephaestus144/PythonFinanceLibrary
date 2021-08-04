@@ -67,14 +67,14 @@ class HullWhite:
         else:
             return self.sigma_interpolator(time)
 
-    def swaption_pricing_vol(self, swaption_expiry: float, strike: float, swap_cashflow_tenors: np.ndarray) -> float:
+    def swaption_pricing_vol(self, time: float, strike: float, swap_cashflow_tenors: np.ndarray) -> float:
         """
         • This implements the swaption pricing formula for the volatility as per formula 16.95 of Green. Denoted
-        :math:`\\Sigma`.
+        :math:`\\Sigma(t)^2`.
         • This is not to be confused with the :math:`\\sigma` Hull-White parameter.
 
-        :param swaption_expiry: Expiry tenor of the swaption.
-        :type swaption_expiry: float
+        :param time: Expiry tenor of the swaption.
+        :type time: float
         :param strike: Swaption strike.
         :type strike: float
         :param swap_cashflow_tenors: Tenors for the swap underlying the swaption.
@@ -93,14 +93,29 @@ class HullWhite:
         for i in range(0, len(swap_cashflow_tenors)):
             df = self.initial_curve.get_discount_factors(swap_cashflow_tenors[i])
             numerator += \
-                b[i] * (self.b_function(swaption_expiry, swap_cashflow_tenors[i]) -
-                        self.b_function(swaption_expiry, swap_cashflow_tenors[-1])) * \
+                b[i] * (self.b_function(time, swap_cashflow_tenors[i]) -
+                        self.b_function(time, swap_cashflow_tenors[-1])) * \
                 df
             denominator += b[i] * df
 
-        return self.interpolate_sigma(swaption_expiry) * numerator / denominator
+        return (self.interpolate_sigma(time) * numerator / denominator) ** 2
 
-    def swaption_pricer(self, strike: float, h: float, swap_cashflow_tenors: np.ndarray) -> float:
+    def h(self, strike, swap_cashflow_tenors):
+        b = np.zeros(len(swap_cashflow_tenors))
+        b[0] = 1
+        b[-1] = 1 + strike * (swap_cashflow_tenors[-1] - swap_cashflow_tenors[-2])
+        for i in range(1, len(swap_cashflow_tenors) - 1):
+            b[i] = strike * (swap_cashflow_tenors[i] - swap_cashflow_tenors[i - 1])
+
+        result = 0
+        for i in range(1, len(swap_cashflow_tenors)):
+            df = self.initial_curve.get_discount_factors(swap_cashflow_tenors[i])
+            result += b[i]*(swap_cashflow_tenors[i] - swap_cashflow_tenors[i-1]) * df
+
+        result /= self.initial_curve.get_discount_factors(swap_cashflow_tenors[-1])
+        return result
+
+    def swaption_pricer(self, strike: float, swap_cashflow_tenors: np.ndarray) -> float:
         """
         This implements the swaption pricer using Hull-White parameters :math:`\\alpha` & :math:`\\sigma` as per
         formula (16.96) of Green.
@@ -114,8 +129,9 @@ class HullWhite:
         :returns: The price of a swaption.
         :rtype: float
         """
+        h0 = self.h(strike, swap_cashflow_tenors)
         v = np.sqrt(quad(self.swaption_pricing_vol, 0, swap_cashflow_tenors[-1], args=(strike, swap_cashflow_tenors)))
-        d1 = np.log(h) / v + 0.5 * v
+        d1 = np.log(h0) / v + 0.5 * v
         d2 = d1 - v
         df = self.initial_curve.get_discount_factors(swap_cashflow_tenors[-1])
-        return df * (h * norm.cdf(d1) - norm.cdf(d2))
+        return df * (h0 * norm.cdf(d1) - norm.cdf(d2))
