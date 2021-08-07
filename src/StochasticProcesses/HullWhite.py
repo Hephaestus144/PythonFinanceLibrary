@@ -150,7 +150,8 @@ class HullWhite:
         :rtype: float
         """
         h0 = self.weighted_strike(strike, swaption_expiry, swap_cashflow_tenors)
-        v = np.sqrt(quad(self.swaption_pricing_vol, 0, swaption_expiry, args=(strike, swap_cashflow_tenors)))
+        v = np.sqrt(
+            quad(self.swaption_pricing_vol, 0, swaption_expiry, args=(strike, swaption_expiry, swap_cashflow_tenors)))
         print(f'\nv: {v}\n')
         d1 = np.log(h0) / v[0] + 0.5 * v[0]
         d2 = d1 - v[0]

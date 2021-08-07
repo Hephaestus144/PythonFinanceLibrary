@@ -11,7 +11,7 @@ def hw_constant_sigma():
     discount_factors = np.array([1.000000000, 0.975309912, 0.951229425, 0.927743486, 0.904837418])
     curve = Curve(tenors=tenors, discount_factors=discount_factors)
     alpha = 0.1
-    return HullWhite(alpha, None, [0.8], curve)
+    return HullWhite(alpha, None, [0.2], curve)
 
 
 @pytest.fixture
@@ -43,12 +43,23 @@ def test_interpolate_variable_sigma(hw_variable_sigma, time, expected):
 
 
 def test_swaption_pricing_vol(hw_constant_sigma):
-    swap_cashflow_tenors = np.array([0.25, 0.50, 0.75, 1.00])
-    actual = hw_constant_sigma.swaption_pricing_vol(time=0.0, strike=0.1, swap_cashflow_tenors=swap_cashflow_tenors)
+    swap_cashflow_tenors = np.array([1.25, 1.50, 1.75, 2.00])
+    actual =\
+        hw_constant_sigma.swaption_pricing_vol(
+            time=0.0,
+            strike=0.1,
+            swaption_expiry=1.0,
+            swap_cashflow_tenors=swap_cashflow_tenors)
+
     print(f'Actual: {np.sqrt(actual)}')
 
 
 def test_swaption_pricer(hw_constant_sigma):
-    swap_cashflow_tenors = np.array([0.25, 0.50, 0.75, 1.00])
-    actual = hw_constant_sigma.swaption_price(0.1, swap_cashflow_tenors)
+    swap_cashflow_tenors = np.array([1.25, 1.50, 1.75, 2.00])
+    actual =\
+        hw_constant_sigma.swaption_price(
+            strike=0.1,
+            swaption_expiry=1.0,
+            swap_cashflow_tenors=swap_cashflow_tenors)
+
     print(f'Actual: {actual}\n')
