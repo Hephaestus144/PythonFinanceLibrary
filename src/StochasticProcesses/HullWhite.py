@@ -67,17 +67,25 @@ class HullWhite:
         else:
             return self.sigma_interpolator(time)
 
-    def swaption_pricing_vol(self, time: float, strike: float, swap_cashflow_tenors: np.ndarray) -> float:
+    def swaption_pricing_vol(
+            self,
+            time: float,
+            strike: float,
+            swaption_expiry: float,
+            swap_cashflow_tenors: np.ndarray) -> float:
         """
         • This implements the swaption pricing formula for the volatility as per formula 16.95 of Green. Denoted
         :math:`\\Sigma(t)^2`.
         • This is not to be confused with the :math:`\\sigma` Hull-White parameter.
 
-        :param time: Expiry tenor of the swaption.
+        :param time: The tenor for which we're calculating the volatility.
         :type time: float
         :param strike: Swaption strike.
         :type strike: float
-        :param swap_cashflow_tenors: Tenors for the swap underlying the swaption.
+        :param swaption_expiry: Expiry tenor of the swaption.
+        :type swaption_expiry: float
+        :param swap_cashflow_tenors: Tenors for the swap underlying the swaption. These need to be greater than
+        swaption_expiry.
         :type swap_cashflow_tenors: np.ndarray
         :returns: Value of swaption pricing vol in terms of Hull-White parameters :math:`\\alpha` &:math:`\\sigma`.
         :rtype: float
@@ -94,13 +102,25 @@ class HullWhite:
             df = self.initial_curve.get_discount_factors(swap_cashflow_tenors[i])
             numerator += \
                 b[i] * (self.b_function(time, swap_cashflow_tenors[i]) -
-                        self.b_function(time, swap_cashflow_tenors[-1])) * \
+                        self.b_function(time, swaption_expiry)) * \
                 df
             denominator += b[i] * df
 
         return (self.interpolate_sigma(time) * numerator / denominator) ** 2
 
-    def h(self, strike, swap_cashflow_tenors):
+    def weighted_strike(self, strike: float, swaption_expiry: float, swap_cashflow_tenors: np.ndarray) -> float:
+        """
+        Calculates the time weighted strike denoted :math:`H(t)` in Green.
+
+        :param strike: The original swaption strike.
+        :type strike: float
+        :param swaption_expiry: The expiry of the swaption.
+        :type swaption_expiry: float
+        :param swap_cashflow_tenors: The tenors of the swap underlying the swaption.
+        :type swap_cashflow_tenors: np.ndarray
+        :returns: The time weighted strike.
+        :rtype: float
+        """
         b = np.zeros(len(swap_cashflow_tenors))
         b[0] = 1
         b[-1] = 1 + strike * (swap_cashflow_tenors[-1] - swap_cashflow_tenors[-2])
@@ -112,7 +132,7 @@ class HullWhite:
             df = self.initial_curve.get_discount_factors(swap_cashflow_tenors[i])
             result += b[i]*(swap_cashflow_tenors[i] - swap_cashflow_tenors[i-1]) * df
 
-        result /= self.initial_curve.get_discount_factors(swap_cashflow_tenors[-1])
+        result /= self.initial_curve.get_discount_factors(swaption_expiry)
         return result
 
     def swaption_pricer(self, strike: float, swap_cashflow_tenors: np.ndarray) -> float:
@@ -122,16 +142,16 @@ class HullWhite:
 
         :param strike: Swaption strike.
         :type strike: float
-        :param h: Who knows what to call this?
-        :type h: float
         :param swap_cashflow_tenors: The tenors of the swap cashflows.
         :type swap_cashflow_tenors: np.ndarray
         :returns: The price of a swaption.
         :rtype: float
         """
-        h0 = self.h(strike, swap_cashflow_tenors)
+        h0 = self.weighted_strike(strike, swap_cashflow_tenors)
         v = np.sqrt(quad(self.swaption_pricing_vol, 0, swap_cashflow_tenors[-1], args=(strike, swap_cashflow_tenors)))
-        d1 = np.log(h0) / v + 0.5 * v
-        d2 = d1 - v
+        print(f'\nv: {v}\n')
+        d1 = np.log(h0) / v[0] + 0.5 * v[0]
+        d2 = d1 - v[0]
         df = self.initial_curve.get_discount_factors(swap_cashflow_tenors[-1])
         return df * (h0 * norm.cdf(d1) - norm.cdf(d2))
+
