@@ -50,5 +50,5 @@ def test_swaption_pricing_vol(hw_constant_sigma):
 
 def test_swaption_pricer(hw_constant_sigma):
     swap_cashflow_tenors = np.array([0.25, 0.50, 0.75, 1.00])
-    actual = hw_constant_sigma.swaption_pricer(0.1, swap_cashflow_tenors)
+    actual = hw_constant_sigma.swaption_price(0.1, swap_cashflow_tenors)
     print(f'Actual: {actual}\n')
