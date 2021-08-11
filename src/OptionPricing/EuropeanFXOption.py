@@ -1,9 +1,10 @@
 import numpy as np
 from scipy.stats import norm
 
-from src.Finance.OptionPricing.OptionStyle import OptionStyle
-from src.Finance.StochasticProcesses.GBM import GBM
-from src.Finance.Curves.InterestRateCurve import InterestRateCurve
+from src.OptionPricing.OptionStyle import OptionStyle
+from src.StochasticProcesses.GBM import GBM
+from src.Curves.InterestRateCurve import InterestRateCurve
+
 
 class EuropeanFXOption:
     def __init__(self, initial_value, strike, domestic_curve: InterestRateCurve,

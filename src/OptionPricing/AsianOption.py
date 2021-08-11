@@ -1,7 +1,7 @@
 import numpy as np
 
-from src.Finance.OptionPricing.OptionStyle import OptionStyle
-from src.Finance.StochasticProcesses.GBM import GBM
+from src.OptionPricing.OptionStyle import OptionStyle
+from src.StochasticProcesses.GBM import GBM
 
 
 class AsianOption:
