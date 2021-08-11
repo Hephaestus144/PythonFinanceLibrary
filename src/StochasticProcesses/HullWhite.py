@@ -129,10 +129,10 @@ class HullWhite:
 
         result = 0
         for i in range(1, len(swap_cashflow_tenors)):
-            df = self.initial_curve.get_discount_factors(swap_cashflow_tenors[i])
+            df = self.initial_curve.get_forward_discount_factors(swaption_expiry, swap_cashflow_tenors[i])
             result += b[i]*(swap_cashflow_tenors[i] - swap_cashflow_tenors[i-1]) * df
 
-        result /= self.initial_curve.get_discount_factors(swaption_expiry)
+        #result /= self.initial_curve.get_discount_factors(swaption_expiry)
         return result
 
     def swaption_price(self, strike: float, swaption_expiry: float, swap_cashflow_tenors: np.ndarray) -> float:
@@ -150,11 +150,12 @@ class HullWhite:
         :rtype: float
         """
         h0 = self.weighted_strike(strike, swaption_expiry, swap_cashflow_tenors)
-        v = np.sqrt(
-            quad(self.swaption_pricing_vol, 0, swaption_expiry, args=(strike, swaption_expiry, swap_cashflow_tenors)))
+        print(f'\nh0: {h0}\n')
+        v = quad(self.swaption_pricing_vol, 0, swaption_expiry, args=(strike, swaption_expiry, swap_cashflow_tenors))[0]
+        v = np.sqrt(v)
         print(f'\nv: {v}\n')
-        d1 = np.log(h0) / v[0] + 0.5 * v[0]
-        d2 = d1 - v[0]
+        d1 = np.log(h0) / v + 0.5 * v
+        d2 = d1 - v
         df = self.initial_curve.get_discount_factors(swaption_expiry)
         return df * (h0 * norm.cdf(d1) - norm.cdf(d2))
 
