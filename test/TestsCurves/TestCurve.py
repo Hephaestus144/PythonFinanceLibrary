@@ -5,7 +5,7 @@ from src.Curves.Curve import Curve
 def test_get_discount_factors_at_nodes_points():
     curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
     expected = np.array([0.95, 0.90, 0.85, 0.80])
-    actual = curve.get_discount_factors([0.25, 0.50, 0.75, 1.00])
+    actual = curve.get_discount_factors(np.ndarray([0.25, 0.50, 0.75, 1.00]))
     assert np.allclose(expected, actual)
 
 
@@ -25,7 +25,7 @@ def test_curve_constructor_from_zero_rates():
 
 def test_discount_factor_at_time_zero():
     curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
-    assert curve.get_discount_factors(0) == 1
+    assert curve.get_discount_factors(np.array(0)) == 1
 
 
 def test_multi_point_discount_factors():
@@ -37,12 +37,12 @@ def test_multi_point_discount_factors():
 
 def test_discount_factor_right_extrapolation():
     curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
-    assert curve.get_discount_factors(1.25) == 0.80
+    assert curve.get_discount_factors(np.array(1.25)) == 0.80
 
 
 def test_discount_factor_left_extrapolation():
     curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
-    assert curve.get_discount_factors(0.125) == 0.975
+    assert curve.get_discount_factors(np.array(0.125)) == 0.975
 
 
 def test_forward_rates():
@@ -56,6 +56,6 @@ def test_forward_rates():
 
 def test_get_forward_discount_factors():
     curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
-    actual = curve.get_forward_discount_factors(0.25, [0.25, 0.50, 0.75, 1.00])
+    actual = curve.get_forward_discount_factors(0.25, np.array([0.25, 0.50, 0.75, 1.00]))
     expected = np.append(1, np.array([0.90, 0.85, 0.80]) / 0.95)
     assert np.allclose(actual, expected)
