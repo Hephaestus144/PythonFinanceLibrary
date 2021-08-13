@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import norm
 
-from src.OptionPricing.OptionStyle import OptionStyle
+from src.Options.OptionStyle import OptionStyle
 from src.StochasticProcesses.GBM import GBM
 from src.Curves.InterestRateCurve import InterestRateCurve
 

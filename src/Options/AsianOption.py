@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.OptionPricing.OptionStyle import OptionStyle
+from src.Options.OptionStyle import OptionStyle
 from src.StochasticProcesses.GBM import GBM
 
 
