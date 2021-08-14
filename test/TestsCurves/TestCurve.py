@@ -3,24 +3,23 @@ from src.Curves.Curve import Curve
 
 
 def test_get_discount_factors_at_nodes_points():
-    curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
-    expected = np.array([0.95, 0.90, 0.85, 0.80])
-    actual = curve.get_discount_factors(np.ndarray([0.25, 0.50, 0.75, 1.00]))
+    curve: Curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
+    expected: np.ndarray = np.array([0.95, 0.90, 0.85, 0.80])
+    actual: np.ndarray = curve.get_discount_factors(np.array([0.25, 0.50, 0.75, 1.00]))
     assert np.allclose(expected, actual)
 
 
 def test_curve_constructor_from_discount_factors():
     curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
-    expected_zero_rates = -1 * np.log([0.95, 0.90, 0.85, 0.80]) / np.array([0.25, 0.50, 0.75, 1.00])
-    assert np.array_equiv(expected_zero_rates, curve.zero_rates)
+    expected: np.ndarray = -1 * np.log([0.95, 0.90, 0.85, 0.80]) / np.array([0.25, 0.50, 0.75, 1.00])
+    assert np.array_equiv(expected, curve.zero_rates)
 
 
 def test_curve_constructor_from_zero_rates():
     curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], zero_rates=[0.05, 0.10, 0.15, 0.20])
-    expected_discount_factors: np.ndarray =\
-        np.exp(-1 * np.array([0.05, 0.10, 0.15, 0.20]) * np.array([0.25, 0.50, 0.75, 1.00]))
-    expected_discount_factors = np.insert(expected_discount_factors, 0, 1)
-    assert np.array_equiv(expected_discount_factors, curve.discount_factors)
+    expected: np.ndarray = np.exp(-1 * np.array([0.05, 0.10, 0.15, 0.20]) * np.array([0.25, 0.50, 0.75, 1.00]))
+    expected = np.insert(expected, 0, 1)
+    assert np.array_equiv(expected, curve.discount_factors)
 
 
 def test_discount_factor_at_time_zero():
