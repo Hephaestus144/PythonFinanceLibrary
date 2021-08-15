@@ -40,13 +40,24 @@ class HullWhite:
         self.initial_curve = initial_curve
 
     def a_function(self, start_tenor: float, end_tenor) -> float:
+        """
+        Calculates the value of the classic 'A' function commonly associated with Hull-White.
+
+        :param start_tenor: The start time.
+        :type start_tenor: float
+        :param end_tenor: The end time.
+        :type end_tenor: float
+        :returns: Value of A function for Hull-White (see Green, Shreve, et al.)
+        :rtype: float
+        """
         dfs: np.ndarray = self.initial_curve.get_discount_factors(np.array([start_tenor, end_tenor]))
         b: float = self.b_function(start_tenor, end_tenor)
 
-        return dfs[1] / dfs[0] * \
-            np.exp(
-                b * self.initial_curve.get_forward_rates(np.array([0]), np.array([start_tenor])) -\
-                b ** 2 * self.sigmas[0] ** 2 / (4 * self.alpha) * (1 - np.exp(-2 * self.alpha * start_tenor)))
+        result = dfs[1] / dfs[0] * \
+               np.exp(
+                   b * self.initial_curve.get_forward_rates(np.array([0]), np.array([start_tenor])) -
+                   b ** 2 * self.sigmas[0] ** 2 / (4 * self.alpha) * (1 - np.exp(-2 * self.alpha * start_tenor)))
+        return result[0]
 
     def b_function(self, start_tenor: float, end_tenor: float) -> float:
         """

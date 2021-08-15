@@ -39,8 +39,8 @@ def test_b_function_equal_start_and_end_tenors(hw_constant_sigma):
 
 def test_a_function(hw_constant_sigma):
     actual = hw_constant_sigma.a_function(np.array([1.0]), np.array([2.0]))
-    expected = 0.1
-    assert actual == expected
+    expected = 1.08193055
+    assert np.allclose(actual, expected)
 
 
 @pytest.mark.parametrize("time,expected", [(0.25, 0.20), (0.75, 0.20)])
