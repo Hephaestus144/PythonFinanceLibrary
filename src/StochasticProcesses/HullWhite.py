@@ -39,18 +39,25 @@ class HullWhite:
 
         self.initial_curve = initial_curve
 
-    def b_function(self, start_time: float, end_time: float) -> float:
+    def a_function(self, start_tenor: float, end_tenor):
+        dfs: np.ndarray = self.initial_curve.get_discount_factors(np.array([start_tenor, end_tenor]))
+        b: float = self.b_function(start_tenor, end_tenor)
+
+        return dfs[1] / dfs[0] * np.exp(b * self.initial_curve.get_forward_rates(0, start_tenor) - b ** 2 * self.sigmas[
+            0] ** 2 / (4 * self.alpha) * (1 - np.exp(-2 * self.alpha * start_tenor)))
+
+    def b_function(self, start_tenor: float, end_tenor: float) -> float:
         """
         Calculates the value of the classic 'B' function commonly associated with Hull-White.
 
-        :param start_time: The start time.
-        :type start_time: float
-        :param end_time: The end time.
-        :type end_time: float
+        :param start_tenor: The start time.
+        :type start_tenor: float
+        :param end_tenor: The end time.
+        :type end_tenor: float
         :returns: Value of B function for Hull-White (see Green, Shreve, et al.)
         :rtype: float
         """
-        return (1 / self.alpha) * (1 - np.exp(-1 * self.alpha * (end_time - start_time)))
+        return (1 / self.alpha) * (1 - np.exp(-1 * self.alpha * (end_tenor - start_tenor)))
 
     def interpolate_sigma(self, time: float):
         """
@@ -130,9 +137,7 @@ class HullWhite:
         result = 0
         for i in range(1, len(swap_cashflow_tenors)):
             df = self.initial_curve.get_forward_discount_factors(swaption_expiry, swap_cashflow_tenors[i])
-            result += b[i]*(swap_cashflow_tenors[i] - swap_cashflow_tenors[i-1]) * df
-
-        #result /= self.initial_curve.get_discount_factors(swaption_expiry)
+            result += b[i] * (swap_cashflow_tenors[i] - swap_cashflow_tenors[i - 1]) * df
         return result
 
     def swaption_price(self, strike: float, swaption_expiry: float, swap_cashflow_tenors: np.ndarray) -> float:
@@ -158,4 +163,3 @@ class HullWhite:
         d2 = d1 - v
         df = self.initial_curve.get_discount_factors(swaption_expiry)
         return df * (h0 * norm.cdf(d1) - norm.cdf(d2))
-

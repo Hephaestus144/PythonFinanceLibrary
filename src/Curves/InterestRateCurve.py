@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
+
 
 from src.Curves.RateConvention import RateConvention
-from Curve import Curve
+from src.Curves.Curve import Curve
 
 
 class InterestRateCurve(Curve):

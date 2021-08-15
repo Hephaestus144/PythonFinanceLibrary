@@ -33,6 +33,16 @@ def test_b_function(hw_constant_sigma):
     assert actual == expected
 
 
+def test_b_function_equal_start_and_end_tenors(hw_constant_sigma):
+    assert hw_constant_sigma.b_function(1, 1) == 0
+
+
+def test_a_function(hw_constant_sigma):
+    actual = hw_constant_sigma.a_function(np.array([1.0]), np.array([2.0]))
+    expected = 0.1
+    assert actual == expected
+
+
 @pytest.mark.parametrize("time,expected", [(0.25, 0.20), (0.75, 0.20)])
 def test_interpolate_constant_sigma(hw_constant_sigma, time, expected):
     assert hw_constant_sigma.interpolate_sigma(time) == expected

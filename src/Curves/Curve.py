@@ -8,6 +8,9 @@ class Curve:
     Base class from which other curves inherit.
     """
     def __init__(self, **kwargs):
+        """
+        Constructor
+        """
         self.tenors: np.ndarray = kwargs.pop('tenors', None)
         self.discount_factors: np.ndarray = kwargs.pop('discount_factors', None)
         self.zero_rates: np.ndarray = kwargs.pop('zero_rates', None)
