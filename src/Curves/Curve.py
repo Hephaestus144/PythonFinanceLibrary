@@ -9,7 +9,8 @@ class Curve:
     """
     def __init__(self, **kwargs):
         """
-        Constructor
+        Constructor for base curve.
+        Set zero_rates to single value to create flat curve.
         """
         self.tenors: np.ndarray = kwargs.pop('tenors', None)
         self.discount_factors: np.ndarray = kwargs.pop('discount_factors', None)
@@ -37,20 +38,21 @@ class Curve:
                 fill_value=(self.discount_factors[0], self.discount_factors[-1]),
                 bounds_error=False)
 
-    def get_discount_factors(self, tenors: np.ndarray, interpolation_method: str = 'linear') -> np.ndarray:
+    def get_discount_factors(self, tenors: np.ndarray) -> np.ndarray:
         """
         Returns discount factors for a list of tenor(s).
 
         Perform linear interpolation and flat extrapolation.
         :param tenors: Tenor(s) for which to interpolate.
         :type tenors: np.ndarray
-        :param interpolation_method: 'linear', 'previous', 'next' etc. the same as scipy interpolate.interp1d methods.
-        :type interpolation_method: str
         :return: Array of discount factors.
         :rtype: np.ndarray
         """
-        # TODO: Make extrapolation configurable.
-        return self.discount_factor_interpolator(tenors)
+        # A single zero rate implies the curve is flat.
+        if len(self.zero_rates) == 1:
+            return np.exp(-1 * self.zero_rates[0] * tenors)
+        else:
+            return self.discount_factor_interpolator(tenors)
 
     def get_forward_discount_factors(self, start_tenor: float, end_tenors: np.ndarray) -> np.ndarray:
         """
@@ -85,6 +87,16 @@ class Curve:
             forward_rates[i] = \
                 1 / (end_points[i] - start_points[i]) * math.log(start_discount_factors[i] / end_discount_factors[i])
         return forward_rates
+
+    def get_zero_rates(self, tenors: np.ndarray) -> np.ndarray:
+        dfs: np.ndarray = self.get_discount_factors(tenors)
+        zero_rates: np.ndarray = np.zeros(len(dfs))
+        for i, df in enumerate(dfs):
+            if tenors[i] == 0:
+                zero_rates[i] = self.zero_rates[0]
+            else:
+                zero_rates[i] = -1 * np.log(dfs[i]) / tenors[i]
+        return zero_rates
 
     def get_first_order_derivative_of_zero_rates(self, tenors: np.ndarray, delta_t: float = 0.0001) -> np.ndarray:
         tenors_plus_delta_t: np.ndarray = tenors + delta_t

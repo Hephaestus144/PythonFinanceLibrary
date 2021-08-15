@@ -39,12 +39,14 @@ class HullWhite:
 
         self.initial_curve = initial_curve
 
-    def a_function(self, start_tenor: float, end_tenor):
+    def a_function(self, start_tenor: float, end_tenor) -> float:
         dfs: np.ndarray = self.initial_curve.get_discount_factors(np.array([start_tenor, end_tenor]))
         b: float = self.b_function(start_tenor, end_tenor)
 
-        return dfs[1] / dfs[0] * np.exp(b * self.initial_curve.get_forward_rates(0, start_tenor) - b ** 2 * self.sigmas[
-            0] ** 2 / (4 * self.alpha) * (1 - np.exp(-2 * self.alpha * start_tenor)))
+        return dfs[1] / dfs[0] * \
+            np.exp(
+                b * self.initial_curve.get_forward_rates(np.array([0]), np.array([start_tenor])) -\
+                b ** 2 * self.sigmas[0] ** 2 / (4 * self.alpha) * (1 - np.exp(-2 * self.alpha * start_tenor)))
 
     def b_function(self, start_tenor: float, end_tenor: float) -> float:
         """

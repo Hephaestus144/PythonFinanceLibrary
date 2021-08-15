@@ -9,6 +9,11 @@ def test_get_discount_factors_at_nodes_points():
     assert np.allclose(expected, actual)
 
 
+def test_get_discount_factor_at_time_zero():
+    curve: Curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
+    assert curve.get_discount_factors(np.array([0.0]))[0] == 1.0
+
+
 def test_curve_constructor_from_discount_factors():
     curve = Curve(tenors=[0.25, 0.50, 0.75, 1.00], discount_factors=[0.95, 0.90, 0.85, 0.80])
     expected: np.ndarray = -1 * np.log([0.95, 0.90, 0.85, 0.80]) / np.array([0.25, 0.50, 0.75, 1.00])
@@ -58,3 +63,18 @@ def test_get_forward_discount_factors():
     actual = curve.get_forward_discount_factors(0.25, np.array([0.25, 0.50, 0.75, 1.00]))
     expected = np.append(1, np.array([0.90, 0.85, 0.80]) / 0.95)
     assert np.allclose(actual, expected)
+
+
+def test_get_zero_rates_flat_curve_single_point():
+    tenors: np.ndarray = np.array([1.0])
+    zero_rates: np.ndarray = np.array([0.1])
+    curve: Curve = Curve(tenors=tenors, zero_rates=zero_rates)
+    assert np.allclose(curve.get_zero_rates(tenors), zero_rates)
+
+
+def test_get_zero_rates_flat_curve_multiple_points():
+    curve_tenors: np.ndarray = np.array([1.0])
+    zero_rates: np.ndarray = np.array([0.1])
+    curve: Curve = Curve(tenors=curve_tenors, zero_rates=zero_rates)
+    test_tenors: np.ndarray = np.array([0.0, 0.5, 1.0, 1.5, 2.0])
+    assert np.allclose(np.array([0.1, 0.1, 0.1, 0.1, 0.1]), curve.get_zero_rates(test_tenors))
