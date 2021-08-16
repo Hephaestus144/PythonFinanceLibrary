@@ -127,8 +127,7 @@ class HullWhite:
             df = self.initial_curve.get_discount_factors(swap_cashflow_tenors[i])
             numerator += \
                 b[i] * (self.b_function(time, swap_cashflow_tenors[i]) -
-                        self.b_function(time, swaption_expiry)) * \
-                df
+                        self.b_function(time, swaption_expiry)) * df
             denominator += b[i] * df
 
         return (self.interpolate_sigma(time) * numerator / denominator) ** 2
@@ -179,5 +178,5 @@ class HullWhite:
         print(f'\nv: {v}\n')
         d1 = np.log(h0) / v + 0.5 * v
         d2 = d1 - v
-        df = self.initial_curve.get_discount_factors(swaption_expiry)
+        df = self.initial_curve.get_discount_factors(np.array([swaption_expiry]))
         return df * (h0 * norm.cdf(d1) - norm.cdf(d2))
