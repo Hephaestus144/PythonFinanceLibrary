@@ -24,8 +24,8 @@ def increasing_curve():
 
 
 def test_payment_tenors(irs):
-    expected = np.arange(0.25, 1.0, 0.25)
-    assert np.allclose(irs.payment_tenors, expected)
+    expected = np.linspace(start=0.25, stop=1.0, num=int(1.00 / 0.25), endpoint=True)
+    assert np.allclose(expected, irs.payment_tenors)
 
 
 def test_compute_swap_fair_rate_flat_curve(irs, flat_curve):
@@ -33,4 +33,8 @@ def test_compute_swap_fair_rate_flat_curve(irs, flat_curve):
 
 
 def test_compute_swap_fair_rate_increasing_curve(irs, increasing_curve):
-    assert np.allclose(irs.compute_fair_swap_rate(increasing_curve), 0.119567104)
+    assert np.allclose(irs.compute_fair_swap_rate(increasing_curve), 0.1291270517696489)
+
+
+def test_day_count_fractions(irs):
+    assert np.allclose(np.array([0.25, 0.25, 0.25, 0.25]), irs.day_count_fractions)

@@ -30,9 +30,17 @@ class InterestRateSwap:
         elif self.payment_frequency == Frequency.ANNUALLY:
             self.time_step = 1.00
 
-        self.payment_tenors: np.ndarray = np.arange(self.start_tenor + self.time_step,
-                                                    self.maturity_tenor,
-                                                    self.time_step)
+        self.payment_tenors: np.ndarray =\
+            np.linspace(
+                start=self.start_tenor + self.time_step,
+                stop=self.maturity_tenor,
+                num=int((self.maturity_tenor - self.start_tenor) / self.time_step),
+                endpoint=True)
+
+        self.day_count_fractions: np.ndarray =\
+            np.array([t2 - t1 for t1, t2 in
+                      zip(np.append(self.start_tenor, self.payment_tenors[:-1]),
+                          self.payment_tenors)])
 
     def compute_fair_swap_rate(self, curve: Curve):
         dfs: np.ndarray = curve.get_discount_factors(self.payment_tenors)
