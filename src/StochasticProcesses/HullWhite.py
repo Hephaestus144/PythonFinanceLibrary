@@ -11,7 +11,12 @@ class HullWhite:
     :math:`dr(t) = (\\theta(t) - \\alpha r(t))dt + \\sigma(t) dW(t)`
     """
 
-    def __init__(self, alpha: float, sigma_tenors: np.ndarray, sigmas: np.ndarray, initial_curve: Curve):
+    def __init__(
+            self,
+            alpha: float,
+            sigma_tenors: np.ndarray,
+            sigmas: np.ndarray,
+            initial_curve: Curve):
         """
         Constructor for the Hull-White process.
 

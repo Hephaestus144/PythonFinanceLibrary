@@ -12,7 +12,7 @@ def hw_constant_sigma():
     discount_factors = np.array([1.000000000, 0.975309912, 0.951229425, 0.927743486, 0.904837418])
     curve = Curve(tenors=tenors, discount_factors=discount_factors)
     alpha = 0.1
-    return HullWhite(alpha, None, [0.2], curve)
+    return HullWhite(alpha, np.array([0.0]), np.array([0.2]), curve)
 
 
 @pytest.fixture
@@ -24,6 +24,28 @@ def hw_variable_sigma():
     sigma_tenors = np.array([0.00, 0.5])
     sigmas = np.array([0.2, 0.15])
     return HullWhite(alpha, sigma_tenors, sigmas, curve)
+
+
+@pytest.fixture
+def flat_curve():
+    """
+    A flat curve of 10%.
+    """
+    tenors = np.array([0.00, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50])
+    discount_factors =\
+        np.array([
+            1.000000000,
+            0.975309912,
+            0.951229425,
+            0.927743486,
+            0.904837418,
+            0.882496903,
+            0.860707976,
+            0.839457021,
+            0.818730753,
+            0.798516219,
+            0.778800783])
+    return Curve(tenors=tenors, discount_factors=discount_factors)
 
 
 def test_b_function(hw_constant_sigma):
@@ -38,7 +60,7 @@ def test_b_function_equal_start_and_end_tenors(hw_constant_sigma):
 
 
 def test_a_function(hw_constant_sigma):
-    actual = hw_constant_sigma.a_function(np.array([1.0]), np.array([2.0]))
+    actual = hw_constant_sigma.a_function(1.0, 2.0)
     expected = 1.08193055
     assert np.allclose(actual, expected)
 
@@ -67,18 +89,17 @@ def test_swaption_pricing_vol(hw_constant_sigma):
 
 def test_weighted_strike(hw_constant_sigma):
     swap_cashflow_tenors = np.array([1.25, 1.50, 1.75, 2.00])
-    h0 = hw_constant_sigma.weighted_strike(strike=0.1, swaption_expiry=1.0, swap_cashflow_tenors=swap_cashflow_tenors)
+    h0 =\
+        hw_constant_sigma.weighted_strike(
+            strike=0.1,
+            swaption_expiry=1.0,
+            swap_cashflow_tenors=swap_cashflow_tenors)
     print(f'\n{h0=}\n')
 
 
-def test_swaption_pricer():
-    tenors = np.array([0.00, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50])
-    discount_factors = np.array([1.000000000, 0.975309912, 0.951229425, 0.927743486, 0.904837418, 0.882496903,
-                                 0.860707976, 0.839457021, 0.818730753, 0.798516219, 0.778800783])
-    curve = Curve(tenors=tenors, discount_factors=discount_factors)
+def test_swaption_pricer(flat_curve):
     alpha = 0.01
-    hw = HullWhite(alpha, None, [0.5], curve)
-
+    hw = HullWhite(alpha, np.array([0.0]), np.array([0.5]), flat_curve)
     swap_cashflow_tenors = np.array([1.25, 1.50, 1.75, 2.00])
     actual =\
         hw.swaption_price(
@@ -89,22 +110,18 @@ def test_swaption_pricer():
     print(f'Actual: {actual}\n')
 
 
-def test_plot_swaption_price():
+def test_plot_swaption_price(flat_curve):
     plt.rcParams.update({
         "text.usetex": True,
         "font.family": "sans-serif",
         "font.sans-serif": ["Helvetica"]})
-    curve_tenors = np.array([0.00, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50])
-    discount_factors = np.array([1.000000000, 0.975309912, 0.951229425, 0.927743486, 0.904837418, 0.882496903,
-                                 0.860707976, 0.839457021, 0.818730753, 0.798516219, 0.778800783])
-    curve = Curve(tenors=curve_tenors, discount_factors=discount_factors)
 
     alphas = np.arange(0.05, 0.5, 0.05)
     sigmas = np.arange(0.0, 2.0, 0.1)
     prices = np.zeros([len(alphas), len(sigmas)])
     for i in range(0, len(alphas)):
         for j in range(0, len(sigmas)):
-            hw = HullWhite(alphas[i], None, [sigmas[j]], curve)
+            hw = HullWhite(alphas[i], np.array([0.0]), np.array([sigmas[j]]), flat_curve)
             swap_cashflow_tenors = np.array([1.25, 1.50, 1.75, 2.00])
             prices[i, j] =\
                 hw.swaption_price(
