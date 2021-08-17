@@ -43,4 +43,10 @@ class Swaption:
             vol * np.sqrt(self.swaption_expiry_tenor)
         return direction * (s * norm.cdf(direction * d1) - self.strike * norm.cdf(direction * d2))
 
-    # def black_price(self, curve: Curve, vol: float):
+    def black_price(self, curve: Curve, vol: float):
+        dfs: np.ndarray = curve.get_discount_factors(self.irs.payment_tenors)
+        annuity_factor: float = 0
+        for i, df in enumerate(dfs):
+            annuity_factor += self.irs.day_count_fractions[i] * df
+
+        return self.notional * self.__blacks_formula(curve, vol) * annuity_factor

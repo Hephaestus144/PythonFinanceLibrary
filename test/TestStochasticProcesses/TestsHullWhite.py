@@ -4,6 +4,7 @@ import pytest
 
 from src.Curves.Curve import Curve
 from src.StochasticProcesses.HullWhite import HullWhite
+from src.Swaps.Frequency import Frequency
 
 
 @pytest.fixture
@@ -102,7 +103,7 @@ def test_swaption_pricer(flat_curve):
     hw = HullWhite(alpha, np.array([0.0]), np.array([0.5]), flat_curve)
     swap_cashflow_tenors = np.array([1.25, 1.50, 1.75, 2.00])
     actual =\
-        hw.swaption_price(
+        hw.swaption_price_green(
             strike=0.1,
             swaption_expiry=1.0,
             swap_cashflow_tenors=swap_cashflow_tenors)
@@ -124,7 +125,7 @@ def test_plot_swaption_price(flat_curve):
             hw = HullWhite(alphas[i], np.array([0.0]), np.array([sigmas[j]]), flat_curve)
             swap_cashflow_tenors = np.array([1.25, 1.50, 1.75, 2.00])
             prices[i, j] =\
-                hw.swaption_price(
+                hw.swaption_price_green(
                     strike=0.1,
                     swaption_expiry=1.0,
                     swap_cashflow_tenors=swap_cashflow_tenors)
@@ -140,4 +141,10 @@ def test_plot_swaption_price(flat_curve):
     ax[0].view_init(30, 135)
     ax[0].set_title(r'Swaption Price as a Function of $\alpha$ and $\sigma$')
     plt.show()
+
+
+def test_r_factor(flat_curve):
+    hw: HullWhite = HullWhite(0.1, np.array([0.0]), np.array([0.2]), flat_curve)
+    r_factor = hw.r_factor(1.0, 1.0, 2.0, Frequency.QUARTERLY, 0.1)
+    assert np.allclose(0.08172531937342564, r_factor)
 

@@ -1,8 +1,11 @@
 import numpy as np
 from scipy.integrate import quad
 from scipy.interpolate import interpolate
+from scipy.optimize import brentq
 from scipy.stats import norm
 from src.Curves.Curve import Curve
+from src.Swaps.InterestRateSwap import InterestRateSwap
+from src.Swaps.Frequency import Frequency
 
 
 class HullWhite:
@@ -55,13 +58,16 @@ class HullWhite:
         :returns: Value of A function for Hull-White (see Green, Shreve, et al.)
         :rtype: float
         """
-        dfs: np.ndarray = self.initial_curve.get_discount_factors(np.array([start_tenor, end_tenor]))
+        dfs: np.ndarray = self.initial_curve.get_discount_factors(
+            np.array([start_tenor, end_tenor]))
         b: float = self.b_function(start_tenor, end_tenor)
 
         result = dfs[1] / dfs[0] * \
-               np.exp(
-                   b * self.initial_curve.get_forward_rates(np.array([0]), np.array([start_tenor])) -
-                   b ** 2 * self.sigmas[0] ** 2 / (4 * self.alpha) * (1 - np.exp(-2 * self.alpha * start_tenor)))
+                 np.exp(
+                     b * self.initial_curve.get_forward_rates(np.array([0]),
+                                                              np.array([start_tenor])) -
+                     b ** 2 * self.sigmas[0] ** 2 / (4 * self.alpha) * (
+                                 1 - np.exp(-2 * self.alpha * start_tenor)))
         return result[0]
 
     def b_function(self, start_tenor: float, end_tenor: float) -> float:
@@ -99,8 +105,8 @@ class HullWhite:
             swaption_expiry: float,
             swap_cashflow_tenors: np.ndarray) -> float:
         """
-        • This implements the swaption pricing formula for the volatility as per formula 16.95 of Green. Denoted
-        :math:`\\Sigma(t)^2`.
+        • This implements the swaption pricing formula for the volatility as per formula 16.95 of
+        Green. Denoted :math:`\\Sigma(t)^2`.
         • This is not to be confused with the :math:`\\sigma` Hull-White parameter.
 
         :param time: The tenor for which we're calculating the volatility.
@@ -132,7 +138,11 @@ class HullWhite:
 
         return (self.interpolate_sigma(time) * numerator / denominator) ** 2
 
-    def weighted_strike(self, strike: float, swaption_expiry: float, swap_cashflow_tenors: np.ndarray) -> float:
+    def weighted_strike(
+            self,
+            strike: float,
+            swaption_expiry: float,
+            swap_cashflow_tenors: np.ndarray) -> float:
         """
         Calculates the time weighted strike denoted :math:`H(t)` in Green.
 
@@ -153,14 +163,21 @@ class HullWhite:
 
         result = 0
         for i in range(1, len(swap_cashflow_tenors)):
-            df = self.initial_curve.get_forward_discount_factors(swaption_expiry, swap_cashflow_tenors[i])
+            df = \
+                self.initial_curve.get_forward_discount_factors(
+                    swaption_expiry,
+                    swap_cashflow_tenors[i])
             result += b[i] * (swap_cashflow_tenors[i] - swap_cashflow_tenors[i - 1]) * df
         return result
 
-    def swaption_price(self, strike: float, swaption_expiry: float, swap_cashflow_tenors: np.ndarray) -> float:
+    def swaption_price_green(
+            self,
+            strike: float,
+            swaption_expiry: float,
+            swap_cashflow_tenors: np.ndarray) -> float:
         """
-        This implements the swaption pricer using Hull-White parameters :math:`\\alpha` & :math:`\\sigma` as per
-        formula (16.96) of Green.
+        This implements the swaption pricer using Hull-White parameters :math:`\\alpha`
+        and :math:`\\sigma` as per formula (16.96) of Green.
 
         :param strike: Swaption strike.
         :type strike: float
@@ -173,10 +190,52 @@ class HullWhite:
         """
         h0 = self.weighted_strike(strike, swaption_expiry, swap_cashflow_tenors)
         print(f'\nh0: {h0}\n')
-        v = quad(self.swaption_pricing_vol, 0, swaption_expiry, args=(strike, swaption_expiry, swap_cashflow_tenors))[0]
+        v = quad(self.swaption_pricing_vol, 0, swaption_expiry,
+                 args=(strike, swaption_expiry, swap_cashflow_tenors))[0]
         v = np.sqrt(v)
         print(f'\nv: {v}\n')
         d1 = np.log(h0) / v + 0.5 * v
         d2 = d1 - v
         df = self.initial_curve.get_discount_factors(np.array([swaption_expiry]))
         return df * (h0 * norm.cdf(d1) - norm.cdf(d2))
+
+    def bond_price(self, start_tenor: float, end_tenor: float, zero_rate: float = None) -> float:
+        if zero_rate is None:
+            zero_rate = self.initial_curve.get_zero_rates(np.array([start_tenor])[0])
+        return self.a_function(start_tenor, end_tenor) * \
+            np.exp(-1 * self.b_function(start_tenor, end_tenor) * zero_rate)
+
+    def r_factor(
+            self,
+            swaption_expiry_tenor: float,
+            swap_start_tenor: float,
+            swap_end_tenor: float,
+            swap_payment_frequency: Frequency,
+            swap_strike: float):
+        """
+        Computes r* from page 77 of Brigo (in between formula 3.44 and 3.45).
+        """
+        irs: InterestRateSwap \
+            = InterestRateSwap(
+                1.00,
+                swap_strike,
+                swap_start_tenor,
+                swap_end_tenor,
+                swap_payment_frequency)
+
+        c_factors: np.ndarray = np.zeros(len(irs.day_count_fractions))
+        for i in range(0, len(irs.day_count_fractions) - 1):
+            c_factors[i] = swap_strike * irs.day_count_fractions[i]
+
+        c_factors[-1] = 1 + swap_strike * irs.day_count_fractions[-1]
+
+        def r_guess_function(r):
+            target: float = 0.0
+            for j in range(0, len(c_factors)):
+                target += \
+                    c_factors[j] * \
+                    self.bond_price(swaption_expiry_tenor, irs.payment_tenors[j], r)
+            return target - 1
+
+        return brentq(r_guess_function, a=swap_strike/2, b=swap_strike*2)
+
