@@ -5,7 +5,7 @@ import pytest
 from src.Curves.Curve import Curve
 from src.Enums.CallPut import CallPut
 from src.StochasticProcesses.HullWhite import HullWhite
-from src.Swaps.Frequency import Frequency
+from src.Enums.Frequency import Frequency
 
 
 @pytest.fixture

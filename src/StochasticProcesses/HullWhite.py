@@ -6,7 +6,7 @@ from scipy.stats import norm
 from src.Curves.Curve import Curve
 from src.Enums.CallPut import CallPut
 from src.Swaps.InterestRateSwap import InterestRateSwap
-from src.Swaps.Frequency import Frequency
+from src.Enums.Frequency import Frequency
 
 
 class HullWhite:

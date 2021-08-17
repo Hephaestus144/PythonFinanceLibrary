@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from src.Curves.Curve import Curve
-from src.Swaps.Frequency import Frequency
+from src.Enums.Frequency import Frequency
 from src.Swaps.InterestRateSwap import InterestRateSwap
 
 

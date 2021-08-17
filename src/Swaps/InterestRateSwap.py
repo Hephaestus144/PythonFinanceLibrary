@@ -1,6 +1,6 @@
 import numpy as np
 from src.Curves.Curve import Curve
-from src.Swaps.Frequency import Frequency
+from src.Enums.Frequency import Frequency
 
 
 class InterestRateSwap:

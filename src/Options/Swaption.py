@@ -1,7 +1,7 @@
 from scipy.stats import norm
 from src.Curves.Curve import Curve
 from src.Options.PayerReceiver import PayerReceiver
-from src.Swaps.Frequency import Frequency
+from src.Enums.Frequency import Frequency
 from src.Swaps.InterestRateSwap import InterestRateSwap
 
 
@@ -9,14 +9,16 @@ import numpy as np
 
 
 class Swaption:
-    def __init__(self,
-                 notional: float,
-                 strike: float,
-                 swaption_expiry_tenor: float,
-                 swap_start_tenor: float,
-                 swap_end_tenor: float,
-                 swap_payment_frequency: Frequency,
-                 payer_receiver: PayerReceiver):
+    def __init__(
+            self,
+            notional: float,
+            strike: float,
+            swaption_expiry_tenor: float,
+            swap_start_tenor: float,
+            swap_end_tenor: float,
+            swap_payment_frequency: Frequency,
+            payer_receiver: PayerReceiver,
+            market_vol: float = None):
         self.notional: float = notional
         self.strike: float = strike
         self.swaption_expiry_tenor: float = swaption_expiry_tenor
@@ -24,6 +26,7 @@ class Swaption:
         self.swap_end_tenor: float = swap_end_tenor
         self.swap_payment_frequency = swap_payment_frequency
         self.payer_receiver: PayerReceiver = payer_receiver
+        self.market_vol: float = market_vol
         self.irs: InterestRateSwap = \
             InterestRateSwap(
                 self.notional,
