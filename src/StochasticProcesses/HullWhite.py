@@ -4,6 +4,7 @@ from scipy.interpolate import interpolate
 from scipy.optimize import brentq
 from scipy.stats import norm
 from src.Curves.Curve import Curve
+from src.Enums.CallPut import CallPut
 from src.Swaps.InterestRateSwap import InterestRateSwap
 from src.Swaps.Frequency import Frequency
 
@@ -67,7 +68,7 @@ class HullWhite:
                      b * self.initial_curve.get_forward_rates(np.array([0]),
                                                               np.array([start_tenor])) -
                      b ** 2 * self.sigmas[0] ** 2 / (4 * self.alpha) * (
-                                 1 - np.exp(-2 * self.alpha * start_tenor)))
+                             1 - np.exp(-2 * self.alpha * start_tenor)))
         return result[0]
 
     def b_function(self, start_tenor: float, end_tenor: float) -> float:
@@ -203,7 +204,7 @@ class HullWhite:
         if zero_rate is None:
             zero_rate = self.initial_curve.get_zero_rates(np.array([start_tenor])[0])
         return self.a_function(start_tenor, end_tenor) * \
-            np.exp(-1 * self.b_function(start_tenor, end_tenor) * zero_rate)
+               np.exp(-1 * self.b_function(start_tenor, end_tenor) * zero_rate)
 
     def r_factor(
             self,
@@ -217,11 +218,11 @@ class HullWhite:
         """
         irs: InterestRateSwap \
             = InterestRateSwap(
-                1.00,
-                swap_strike,
-                swap_start_tenor,
-                swap_end_tenor,
-                swap_payment_frequency)
+            1.00,
+            swap_strike,
+            swap_start_tenor,
+            swap_end_tenor,
+            swap_payment_frequency)
 
         c_factors: np.ndarray = np.zeros(len(irs.day_count_fractions))
         for i in range(0, len(irs.day_count_fractions) - 1):
@@ -237,5 +238,32 @@ class HullWhite:
                     self.bond_price(swaption_expiry_tenor, irs.payment_tenors[j], r)
             return target - 1
 
-        return brentq(r_guess_function, a=swap_strike/2, b=swap_strike*2)
+        return brentq(r_guess_function, a=swap_strike / 2, b=swap_strike * 2)
 
+    def bond_option_price(
+            self,
+            valuation_tenor: float,
+            bond_maturity_tenor: float,
+            option_expiry_tenor: float,
+            strike: float,
+            call_put: CallPut):
+        df: float = \
+            self.initial_curve.get_forward_discount_factors(
+                option_expiry_tenor,
+                np.array([bond_maturity_tenor]))[0]
+        bond_vol: float = \
+            self.sigmas[0] * \
+            np.sqrt((1 - np.exp(-2 * self.alpha * (option_expiry_tenor - valuation_tenor))) /
+                    (2 * self.alpha)) * df
+
+        dfs: np.ndarray =\
+            self.initial_curve.get_forward_discount_factors(
+                valuation_tenor,
+                np.array([option_expiry_tenor, bond_maturity_tenor]))
+
+        h: float = (1/bond_vol) * np.log(dfs[1] / (dfs[0] * strike)) + 0.5 * bond_vol
+
+        if call_put == CallPut.CALL:
+            return dfs[1] * norm.cdf(h) - strike * norm.cdf(h - bond_vol)
+        else:
+            return strike * dfs[0] * norm.cdf(-h + bond_vol) - dfs[1] * norm.cdf(-h)
