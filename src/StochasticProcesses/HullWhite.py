@@ -212,7 +212,7 @@ class HullWhite:
             swap_start_tenor: float,
             swap_end_tenor: float,
             swap_payment_frequency: Frequency,
-            swap_strike: float):
+            swap_strike: float) -> float:
         """
         Computes r* from page 77 of Brigo (in between formula 3.44 and 3.45).
         """
@@ -238,7 +238,7 @@ class HullWhite:
                     self.bond_price(swaption_expiry_tenor, irs.payment_tenors[j], r)
             return target - 1
 
-        return brentq(r_guess_function, a=swap_strike / 2, b=swap_strike * 2)
+        return brentq(r_guess_function, a=swap_strike / 2, b=swap_strike * 2, full_output=True)[0]
 
     def bond_option_price(
             self,
@@ -267,3 +267,48 @@ class HullWhite:
             return dfs[1] * norm.cdf(h) - strike * norm.cdf(h - bond_vol)
         else:
             return strike * dfs[0] * norm.cdf(-h + bond_vol) - dfs[1] * norm.cdf(-h)
+
+    def swaption_price(
+            self,
+            valuation_tenor: float,
+            swap_start_tenor: float,
+            swap_end_tenor: float,
+            swaption_expiry_tenor: float,
+            swap_payment_frequency: Frequency,
+            swap_strike: float):
+        irs: InterestRateSwap \
+            = InterestRateSwap(
+                1.00,
+                swap_strike,
+                swap_start_tenor,
+                swap_end_tenor,
+                swap_payment_frequency)
+
+        c_factors: np.ndarray = np.zeros(len(irs.day_count_fractions))
+        for i in range(0, len(irs.day_count_fractions) - 1):
+            c_factors[i] = swap_strike * irs.day_count_fractions[i]
+
+        c_factors[-1] = 1 + swap_strike * irs.day_count_fractions[-1]
+
+        r_star\
+            = self.r_factor(
+                swaption_expiry_tenor,
+                swap_start_tenor,
+                swap_end_tenor,
+                swap_payment_frequency,
+                swap_strike)
+
+        strikes: np.ndarray = np.zeros(len(c_factors))
+
+        for i in range(0, len(strikes)):
+            strikes[i] = self.bond_price(swaption_expiry_tenor, irs.payment_tenors[i], r_star)
+
+        price: float = 0
+        for i in range(0, len(c_factors)):
+            price +=\
+                c_factors[i] * self.bond_option_price(valuation_tenor,
+                                                      swaption_expiry_tenor,
+                                                      irs.payment_tenors[i],
+                                                      strikes[i],
+                                                      CallPut.PUT)
+        return price
